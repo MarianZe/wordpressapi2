@@ -8,7 +8,7 @@ Transformiere Artikel automatisch in WordPress-kompatiblen HTML-Code mit Gutenki
 Die visuelle Benutzeroberfläche mit Mock-Daten ist fertiggestellt.
 
 **Phase 2: Vollständig abgeschlossen ✓**
-Document Processing und AI-basierte Mustererkennung sind implementiert.
+Document Processing und regel-basierte Mustererkennung sind implementiert.
 
 ## Features
 
@@ -23,8 +23,7 @@ Document Processing und AI-basierte Mustererkennung sind implementiert.
 ### Processing Engine (Phase 2)
 - ✅ Dokument-Parsing (.docx, .txt)
 - ✅ Markdown-to-HTML Konvertierung
-- ✅ **AI-basierte Mustererkennung** mit Claude API
-- ✅ Fallback zu regel-basierter Erkennung
+- ✅ **Regel-basierte Mustererkennung** mit Trigger-Wörtern
 - ✅ **Gutenkit-Block-Generator** mit allen Templates:
   - Praxistipp-Box (grün)
   - Wusstest-Du-schon-Box (blau)
@@ -43,17 +42,12 @@ Document Processing und AI-basierte Mustererkennung sind implementiert.
 - **Animation:** framer-motion
 - **State Management:** Zustand
 - **Document Processing:** mammoth (DOCX), marked (Markdown)
-- **AI Integration:** @anthropic-ai/sdk (Claude API)
 
 ## Getting Started
 
 ```bash
 # Dependencies installieren
 npm install
-
-# Umgebungsvariablen konfigurieren (optional)
-cp .env.example .env
-# Füge deinen Anthropic API-Key hinzu für AI-Mustererkennung
 
 # Development Server starten
 npm run dev
@@ -70,17 +64,7 @@ npx tsx src/lib/test-processor.ts
 
 Die Anwendung läuft standardmäßig auf [http://localhost:3000](http://localhost:3000).
 
-### Umgebungsvariablen
-
-```env
-# Optional: Anthropic API Key für AI-basierte Mustererkennung
-ANTHROPIC_API_KEY=your-api-key-here
-
-# Optional: AI Pattern Recognition aktivieren/deaktivieren
-USE_AI_PATTERN_RECOGNITION=false
-```
-
-**Hinweis:** Die Anwendung funktioniert auch ohne API-Key und nutzt dann regel-basierte Mustererkennung als Fallback.
+**Hinweis:** Es werden keine API-Keys oder Umgebungsvariablen benötigt. Die Anwendung nutzt regel-basierte Mustererkennung.
 
 ## Projektstruktur
 
@@ -103,7 +87,7 @@ src/
     ├── article-processor.ts   # Haupt-Processing-Pipeline
     ├── document-parser.ts     # DOCX/TXT Parsing
     ├── markdown-converter.ts  # Markdown-to-HTML
-    ├── ai-pattern-recognition.ts  # AI Mustererkennung
+    ├── ai-pattern-recognition.ts  # Regel-basierte Mustererkennung
     ├── gutenkit-generator.ts  # Gutenkit-Block-Generator
     ├── mock-data.ts           # Mock-Daten
     ├── store.ts               # Zustand State Management
@@ -128,11 +112,11 @@ Die Article-to-Design-Automatisierung verwendet eine mehrstufige Pipeline:
 1. **Dokument-Parsing**: Extrahiert Text aus .docx/.txt Dateien
 2. **Text-Normalisierung**: Bereinigt und standardisiert den Text
 3. **Pattern Recognition**: Erkennt semantische Muster (Praxistipp, Fun-Fact, etc.)
-   - Mit AI: Claude API analysiert den Text intelligent
-   - Ohne AI: Regel-basierte Erkennung mit Trigger-Wörtern
+   - Regel-basierte Erkennung mit Trigger-Wörtern
+   - Kein API-Key erforderlich
 4. **HTML-Generierung**: Konvertiert Text in WordPress Gutenberg Blöcke
 5. **Gutenkit-Block-Injection**: Fügt Design-Boxen an erkannten Positionen ein
-6. **Autorenbox**: Wird automatisch am Ende hinzugefügt
+6. **Autorenbox**: Wird automatisch am Ende hinzugefügt (WordPress Block-Referenz)
 
 ### Unterstützte Muster
 

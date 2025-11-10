@@ -48,10 +48,8 @@ async function runTest() {
   console.log('Processing test article...\n')
 
   try {
-    const result = await processArticleFromText(testArticle, {
-      useAI: false, // Set to true if you have an API key
-      // anthropicApiKey: process.env.ANTHROPIC_API_KEY,
-    })
+    // Uses rule-based pattern detection (no AI required)
+    const result = await processArticleFromText(testArticle)
 
     console.log('✓ Processing completed successfully!\n')
     console.log(`Patterns found: ${result.patternsFound}`)

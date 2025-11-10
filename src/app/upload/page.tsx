@@ -34,11 +34,8 @@ export default function UploadPage() {
       console.log('File size:', selectedFile.size)
       console.log('File type:', selectedFile.type)
 
-      // Use the real processing pipeline
-      const result = await processArticle(selectedFile, {
-        useAI: false, // Set to true if you have an API key
-        // anthropicApiKey: process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY,
-      })
+      // Use the real processing pipeline (rule-based, no AI required)
+      const result = await processArticle(selectedFile)
 
       console.log('Processing completed:', result)
 

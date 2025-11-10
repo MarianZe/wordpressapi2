@@ -9,8 +9,8 @@
  * 5. Final HTML assembly
  */
 
-import { parseDocument, normalizeText, splitIntoParagraphs } from './document-parser'
-import { analyzeTextForPatterns, detectPatternsSimple, RecognizedPattern } from './ai-pattern-recognition'
+import { parseDocument, normalizeText } from './document-parser'
+import { detectPatternsSimple, RecognizedPattern } from './ai-pattern-recognition'
 import { convertInlineMarkdown, hasMarkdownSyntax, convertMarkdownToHtml } from './markdown-converter'
 import {
   generateGutenkitBlock,
@@ -19,11 +19,6 @@ import {
   wrapInList,
   generateAutorenbox,
 } from './gutenkit-generator'
-
-export interface ProcessingOptions {
-  useAI?: boolean
-  anthropicApiKey?: string
-}
 
 export interface ProcessingResult {
   originalContent: string
@@ -75,15 +70,19 @@ function processParagraph(paragraph: string): string {
 
 /**
  * Build the text segments, replacing patterns with Gutenkit blocks
+ * IMPORTANT: Lines that are converted to pattern boxes should NOT be processed as regular paragraphs
  */
 function buildHtmlWithPatterns(text: string, patterns: RecognizedPattern[]): string {
-  // Sort patterns by position
-  const sortedPatterns = [...patterns].sort((a, b) => a.startPosition - b.startPosition)
-
   let html = ''
   const lines = text.split('\n')
-  let i = 0
 
+  // Create a Set of line indices that are patterns (for fast lookup)
+  const patternLineIndices = new Set(patterns.map(p => p.lineIndex))
+
+  console.log('[BuildHTML] Processing', lines.length, 'lines')
+  console.log('[BuildHTML] Pattern lines:', Array.from(patternLineIndices))
+
+  let i = 0
   while (i < lines.length) {
     const line = lines[i].trim()
 
@@ -92,61 +91,63 @@ function buildHtmlWithPatterns(text: string, patterns: RecognizedPattern[]): str
       continue
     }
 
-    // Check if this line contains a pattern
-    const linePos = lines.slice(0, i).join('\n').length + i
-    const pattern = sortedPatterns.find(
-      p => linePos >= p.startPosition && linePos <= p.endPosition
-    )
+    // Check if this line is a pattern
+    const pattern = patterns.find(p => p.lineIndex === i)
 
     if (pattern) {
-      // Generate Gutenkit block for this pattern
+      // This line contains a pattern - convert to Gutenkit block
+      console.log(`[BuildHTML] Line ${i} is a pattern (${pattern.type}) - generating box`)
       html += generateGutenkitBlock({
         type: pattern.type,
         content: pattern.content,
         metadata: pattern.metadata,
       })
       html += '\n\n'
-
-      // Remove this pattern from the list
-      const index = sortedPatterns.indexOf(pattern)
-      if (index > -1) {
-        sortedPatterns.splice(index, 1)
-      }
       i++
-    } else {
-      // Check if this is a list item
-      if (/^[-*+]\s/.test(line) || /^\d+\.\s/.test(line)) {
-        // Collect all consecutive list items
-        const isOrdered = /^\d+\.\s/.test(line)
-        const listItems: string[] = []
+      // IMPORTANT: Do NOT process this line as a regular paragraph!
+      continue
+    }
 
-        while (i < lines.length) {
-          const currentLine = lines[i].trim()
-          if (!currentLine) {
-            i++
-            break
-          }
+    // This line is NOT a pattern - process normally
 
-          if (isOrdered ? /^\d+\.\s/.test(currentLine) : /^[-*+]\s/.test(currentLine)) {
-            const item = currentLine.replace(/^[-*+]\s/, '').replace(/^\d+\.\s/, '').trim()
-            // Convert inline markdown in list items
-            listItems.push(convertInlineMarkdown(item))
-            i++
-          } else {
-            break
-          }
+    // Check if this is a list item
+    if (/^[-*+]\s/.test(line) || /^\d+\.\s/.test(line)) {
+      // Collect all consecutive list items
+      const isOrdered = /^\d+\.\s/.test(line)
+      const listItems: string[] = []
+
+      while (i < lines.length) {
+        const currentLine = lines[i].trim()
+        if (!currentLine) {
+          i++
+          break
         }
 
-        if (listItems.length > 0) {
-          html += wrapInList(listItems, isOrdered)
-          html += '\n\n'
+        // Make sure this list item line is not a pattern
+        if (patternLineIndices.has(i)) {
+          break
         }
-      } else {
-        // Regular line, process as paragraph or heading
-        html += processParagraph(line)
-        html += '\n\n'
-        i++
+
+        if (isOrdered ? /^\d+\.\s/.test(currentLine) : /^[-*+]\s/.test(currentLine)) {
+          const item = currentLine.replace(/^[-*+]\s/, '').replace(/^\d+\.\s/, '').trim()
+          // Convert inline markdown in list items
+          listItems.push(convertInlineMarkdown(item))
+          i++
+        } else {
+          break
+        }
       }
+
+      if (listItems.length > 0) {
+        html += wrapInList(listItems, isOrdered)
+        html += '\n\n'
+      }
+    } else {
+      // Regular line, process as paragraph or heading
+      console.log(`[BuildHTML] Line ${i} is regular content - processing as paragraph`)
+      html += processParagraph(line)
+      html += '\n\n'
+      i++
     }
   }
 
@@ -155,48 +156,33 @@ function buildHtmlWithPatterns(text: string, patterns: RecognizedPattern[]): str
 
 /**
  * Main article processing function
+ * Uses rule-based pattern detection (no AI required)
  */
-export async function processArticle(
-  file: File,
-  options: ProcessingOptions = {}
-): Promise<ProcessingResult> {
+export async function processArticle(file: File): Promise<ProcessingResult> {
   const startTime = Date.now()
 
   try {
     // Step 1: Parse document
-    console.log('Step 1: Parsing document...')
+    console.log('[Step 1] Parsing document...')
     const parsed = await parseDocument(file)
     const normalizedText = normalizeText(parsed.content)
+    console.log('[Step 1] Document parsed, length:', normalizedText.length)
 
-    // Step 2: Pattern recognition
-    console.log('Step 2: Recognizing patterns...')
-    let patterns: RecognizedPattern[] = []
-
-    if (options.useAI && options.anthropicApiKey) {
-      try {
-        console.log('Using AI pattern recognition...')
-        const analysis = await analyzeTextForPatterns(normalizedText, options.anthropicApiKey)
-        patterns = analysis.patterns
-      } catch (error) {
-        console.warn('AI pattern recognition failed, falling back to simple detection:', error)
-        patterns = detectPatternsSimple(normalizedText)
-      }
-    } else {
-      console.log('Using simple pattern detection...')
-      patterns = detectPatternsSimple(normalizedText)
-    }
-
-    console.log(`Found ${patterns.length} patterns`)
+    // Step 2: Pattern recognition (rule-based)
+    console.log('[Step 2] Recognizing patterns...')
+    const patterns = detectPatternsSimple(normalizedText)
+    console.log(`[Step 2] Found ${patterns.length} pattern(s)`)
 
     // Step 3: Build HTML with Gutenkit blocks
-    console.log('Step 3: Building HTML with Gutenkit blocks...')
+    console.log('[Step 3] Building HTML with Gutenkit blocks...')
     let processedHtml = buildHtmlWithPatterns(normalizedText, patterns)
 
     // Step 4: Add Autorenbox at the end
+    console.log('[Step 4] Adding Autorenbox...')
     processedHtml += '\n\n' + generateAutorenbox()
 
     const processingTime = Date.now() - startTime
-    console.log(`Processing completed in ${processingTime}ms`)
+    console.log(`[Complete] Processing completed in ${processingTime}ms`)
 
     return {
       originalContent: normalizedText,
@@ -205,43 +191,32 @@ export async function processArticle(
       processingTime,
     }
   } catch (error) {
-    console.error('Error processing article:', error)
+    console.error('[Error] Processing article failed:', error)
     throw error
   }
 }
 
 /**
  * Process article from text string (for testing)
+ * Uses rule-based pattern detection (no AI required)
  */
-export async function processArticleFromText(
-  text: string,
-  options: ProcessingOptions = {}
-): Promise<ProcessingResult> {
+export async function processArticleFromText(text: string): Promise<ProcessingResult> {
   const startTime = Date.now()
 
   try {
+    console.log('[ProcessText] Starting processing...')
     const normalizedText = normalizeText(text)
 
-    // Pattern recognition
-    let patterns: RecognizedPattern[] = []
-
-    if (options.useAI && options.anthropicApiKey) {
-      try {
-        const analysis = await analyzeTextForPatterns(normalizedText, options.anthropicApiKey)
-        patterns = analysis.patterns
-      } catch (error) {
-        console.warn('AI pattern recognition failed, falling back to simple detection:', error)
-        patterns = detectPatternsSimple(normalizedText)
-      }
-    } else {
-      patterns = detectPatternsSimple(normalizedText)
-    }
+    // Pattern recognition (rule-based)
+    const patterns = detectPatternsSimple(normalizedText)
+    console.log(`[ProcessText] Found ${patterns.length} pattern(s)`)
 
     // Build HTML
     let processedHtml = buildHtmlWithPatterns(normalizedText, patterns)
     processedHtml += '\n\n' + generateAutorenbox()
 
     const processingTime = Date.now() - startTime
+    console.log(`[ProcessText] Completed in ${processingTime}ms`)
 
     return {
       originalContent: normalizedText,
@@ -250,7 +225,7 @@ export async function processArticleFromText(
       processingTime,
     }
   } catch (error) {
-    console.error('Error processing article from text:', error)
+    console.error('[Error] Processing text failed:', error)
     throw error
   }
 }
