@@ -30,11 +30,17 @@ export default function UploadPage() {
     setStatus('processing')
 
     try {
+      console.log('Starting processing for:', selectedFile.name)
+      console.log('File size:', selectedFile.size)
+      console.log('File type:', selectedFile.type)
+
       // Use the real processing pipeline
       const result = await processArticle(selectedFile, {
         useAI: false, // Set to true if you have an API key
         // anthropicApiKey: process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY,
       })
+
+      console.log('Processing completed:', result)
 
       // Generate a unique ID
       const articleId = `processed-${Date.now()}`
@@ -56,8 +62,11 @@ export default function UploadPage() {
       setStatus('completed')
     } catch (error) {
       console.error('Processing error:', error)
+      console.error('Error details:', error instanceof Error ? error.message : 'Unknown error')
+      console.error('Error stack:', error instanceof Error ? error.stack : '')
       setStatus('failed')
-      alert('Fehler beim Verarbeiten des Artikels. Bitte versuche es erneut.')
+      const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler'
+      alert(`Fehler beim Verarbeiten: ${errorMessage}\n\nÖffne die Browser-Konsole (F12) für Details.`)
     }
   }
 
