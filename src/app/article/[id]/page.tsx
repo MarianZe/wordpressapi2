@@ -18,12 +18,43 @@ interface PageProps {
 
 export default function ArticleDetailPage({ params }: PageProps) {
   const { id } = use(params)
+  const processedArticles = useAppStore((state) => state.processedArticles)
   const getArticleById = useAppStore((state) => state.getArticleById)
+  const hasHydrated = useAppStore((state) => state._hasHydrated)
+
+  // Debug logging
+  console.log('=== Article Detail Page Debug ===')
+  console.log('Article ID from URL:', id)
+  console.log('Store has hydrated:', hasHydrated)
+  console.log('Processed articles in store:', processedArticles)
+  console.log('Store length:', processedArticles.length)
+
+  // Show loading state while store is rehydrating from localStorage
+  if (!hasHydrated) {
+    return (
+      <Layout>
+        <div className="max-w-4xl mx-auto text-center py-12">
+          <div className="animate-pulse">
+            <div className="h-8 bg-[var(--bg-2)] rounded w-48 mx-auto mb-4"></div>
+            <div className="h-4 bg-[var(--bg-2)] rounded w-64 mx-auto"></div>
+          </div>
+          <p className="text-[var(--fg-3)] mt-4 text-sm">
+            Lade Artikel...
+          </p>
+        </div>
+      </Layout>
+    )
+  }
 
   // Try to find article in store first, then fall back to mock data
   const storeArticle = getArticleById(id)
   const mockArticle = mockArticles.find((a) => a.id === id)
   const article = storeArticle || mockArticle
+
+  console.log('Store article:', storeArticle ? 'Found' : 'Not found')
+  console.log('Mock article:', mockArticle ? 'Found' : 'Not found')
+  console.log('Final article:', article ? 'Found' : 'Not found')
+  console.log('=== End Debug ===')
 
   if (!article) {
     return (
@@ -32,7 +63,25 @@ export default function ArticleDetailPage({ params }: PageProps) {
           <h1 className="text-2xl font-bold text-[var(--fg-1)] mb-4">
             Artikel nicht gefunden
           </h1>
-          <ButtonLink href="/">Zurück zum Dashboard</ButtonLink>
+          <p className="text-[var(--fg-3)] mb-4">
+            ID: {id}
+          </p>
+          <p className="text-xs text-[var(--fg-3)] mb-4">
+            Store hat {processedArticles.length} Artikel(n)
+          </p>
+          <details className="text-xs text-left max-w-md mx-auto mt-4">
+            <summary className="cursor-pointer text-[var(--fg-2)] hover:text-[var(--fg-1)]">
+              Debug Info anzeigen
+            </summary>
+            <pre className="mt-2 p-4 bg-[var(--bg-2)] rounded text-[var(--fg-3)] overflow-auto">
+              {JSON.stringify({
+                searchingFor: id,
+                availableIds: processedArticles.map(a => a.id),
+                storeHydrated: hasHydrated
+              }, null, 2)}
+            </pre>
+          </details>
+          <ButtonLink href="/" className="mt-4">Zurück zum Dashboard</ButtonLink>
         </div>
       </Layout>
     )
