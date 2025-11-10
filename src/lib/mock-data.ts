@@ -74,12 +74,7 @@ Wusstest Du schon? Studien zeigen, dass digitale Lerntools die Motivation um bis
 </ul>
 <!-- /wp:list -->
 
-<!-- wp:html -->
-<div class="author-box">
-  <p><strong>Über den Autor</strong></p>
-  <p>Dieser Artikel wurde automatisch generiert und formatiert.</p>
-</div>
-<!-- /wp:html -->`,
+<!-- wp:block {"ref":278} /-->`,
   },
   {
     id: '2',

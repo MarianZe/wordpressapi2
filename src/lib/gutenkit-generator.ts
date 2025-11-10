@@ -81,14 +81,10 @@ export function generateFAQSection(title: string, faqs: Array<{ question: string
 
 /**
  * Generates the Autorenbox (Author box) - always at the end
+ * Uses a reusable WordPress block reference
  */
 export function generateAutorenbox(): string {
-  return `<!-- wp:html -->
-<div class="author-box">
-  <p><strong>Über den Autor</strong></p>
-  <p>Dieser Artikel wurde automatisch generiert und formatiert.</p>
-</div>
-<!-- /wp:html -->`
+  return `<!-- wp:block {"ref":278} /-->`
 }
 
 /**
