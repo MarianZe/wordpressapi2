@@ -27,16 +27,15 @@ export const mockArticles: Article[] = [
 
 Die Digitalisierung revolutioniert das Bildungswesen. Moderne Lernmethoden ermöglichen personalisiertes Lernen und fördern die individuelle Entwicklung der Lernenden.
 
-## Praxistipp
-Beginne mit kleinen Schritten: Integriere zunächst ein digitales Tool pro Monat in deinen Unterricht. So können sich Lehrende und Lernende schrittweise an die neuen Technologien gewöhnen.
+Praxistipp: Beginne mit kleinen Schritten: Integriere zunächst ein digitales Tool pro Monat in deinen Unterricht. So können sich Lehrende und Lernende schrittweise an die neuen Technologien gewöhnen.
 
 Wusstest Du schon? Studien zeigen, dass digitale Lerntools die Motivation um bis zu 30% steigern können, wenn sie richtig eingesetzt werden.
 
 ## Die wichtigsten Vorteile
 
-**Flexibilität**: Lernen ist nicht mehr an feste Zeiten gebunden.
-**Individualisierung**: Jeder kann in seinem eigenen Tempo lernen.
-**Interaktivität**: Digitale Tools fördern die aktive Teilnahme.`,
+- **Flexibilität**: Lernen ist nicht mehr an feste Zeiten gebunden
+- **Individualisierung**: Jeder kann in seinem eigenen Tempo lernen
+- **Interaktivität**: Digitale Tools fördern die aktive Teilnahme`,
     processedHtml: `<!-- wp:heading {"level":1} -->
 <h1 class="wp-block-heading">Digitalisierung in der Bildung</h1>
 <!-- /wp:heading -->
@@ -64,16 +63,23 @@ Wusstest Du schon? Studien zeigen, dass digitale Lerntools die Motivation um bis
 <!-- wp:list -->
 <ul class="wp-block-list">
   <!-- wp:list-item -->
-  <li><b>Flexibilität</b>: Lernen ist nicht mehr an feste Zeiten gebunden.</li>
+  <li><strong>Flexibilität</strong>: Lernen ist nicht mehr an feste Zeiten gebunden</li>
   <!-- /wp:list-item -->
   <!-- wp:list-item -->
-  <li><b>Individualisierung</b>: Jeder kann in seinem eigenen Tempo lernen.</li>
+  <li><strong>Individualisierung</strong>: Jeder kann in seinem eigenen Tempo lernen</li>
   <!-- /wp:list-item -->
   <!-- wp:list-item -->
-  <li><b>Interaktivität</b>: Digitale Tools fördern die aktive Teilnahme.</li>
+  <li><strong>Interaktivität</strong>: Digitale Tools fördern die aktive Teilnahme</li>
   <!-- /wp:list-item -->
 </ul>
-<!-- /wp:list -->`,
+<!-- /wp:list -->
+
+<!-- wp:html -->
+<div class="author-box">
+  <p><strong>Über den Autor</strong></p>
+  <p>Dieser Artikel wurde automatisch generiert und formatiert.</p>
+</div>
+<!-- /wp:html -->`,
   },
   {
     id: '2',

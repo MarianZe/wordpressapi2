@@ -5,17 +5,34 @@ Transformiere Artikel automatisch in WordPress-kompatiblen HTML-Code mit Gutenki
 ## Projekt-Status
 
 **Phase 1: Vollständig abgeschlossen ✓**
+Die visuelle Benutzeroberfläche mit Mock-Daten ist fertiggestellt.
 
-Die visuelle Benutzeroberfläche mit Mock-Daten ist fertiggestellt. Die Anwendung läuft vollständig im Browser mit statischen Komponenten.
+**Phase 2: Vollständig abgeschlossen ✓**
+Document Processing und AI-basierte Mustererkennung sind implementiert.
 
-## Features (Phase 1)
+## Features
 
+### UI & Design (Phase 1)
 - ✅ Responsive Dashboard mit Artikel-Übersicht
 - ✅ Upload-Interface für .doc, .docx und .txt Dateien
 - ✅ Artikel-Detailansicht mit Original- und HTML-Code-Anzeige
 - ✅ Training-Daten-Verwaltung für Referenz-Artikel
 - ✅ Dark/Light Mode Toggle
 - ✅ Minimalist & Modern SaaS Design System
+
+### Processing Engine (Phase 2)
+- ✅ Dokument-Parsing (.docx, .txt)
+- ✅ Markdown-to-HTML Konvertierung
+- ✅ **AI-basierte Mustererkennung** mit Claude API
+- ✅ Fallback zu regel-basierter Erkennung
+- ✅ **Gutenkit-Block-Generator** mit allen Templates:
+  - Praxistipp-Box (grün)
+  - Wusstest-Du-schon-Box (blau)
+  - Fun-Fact-Box (orange)
+  - Prompt-Box (neue HTML-Version)
+  - FAQ-Komponente
+  - Autorenbox
+- ✅ Vollständige Processing-Pipeline
 
 ## Tech Stack
 
@@ -25,12 +42,18 @@ Die visuelle Benutzeroberfläche mit Mock-Daten ist fertiggestellt. Die Anwendun
 - **Icons:** lucide-react
 - **Animation:** framer-motion
 - **State Management:** Zustand
+- **Document Processing:** mammoth (DOCX), marked (Markdown)
+- **AI Integration:** @anthropic-ai/sdk (Claude API)
 
 ## Getting Started
 
 ```bash
 # Dependencies installieren
 npm install
+
+# Umgebungsvariablen konfigurieren (optional)
+cp .env.example .env
+# Füge deinen Anthropic API-Key hinzu für AI-Mustererkennung
 
 # Development Server starten
 npm run dev
@@ -40,31 +63,52 @@ npm run build
 
 # Production Server starten
 npm start
+
+# Test der Processing-Pipeline
+npx tsx src/lib/test-processor.ts
 ```
 
 Die Anwendung läuft standardmäßig auf [http://localhost:3000](http://localhost:3000).
+
+### Umgebungsvariablen
+
+```env
+# Optional: Anthropic API Key für AI-basierte Mustererkennung
+ANTHROPIC_API_KEY=your-api-key-here
+
+# Optional: AI Pattern Recognition aktivieren/deaktivieren
+USE_AI_PATTERN_RECOGNITION=false
+```
+
+**Hinweis:** Die Anwendung funktioniert auch ohne API-Key und nutzt dann regel-basierte Mustererkennung als Fallback.
 
 ## Projektstruktur
 
 ```
 src/
-├── app/                    # Next.js App Router Pages
-│   ├── page.tsx           # Dashboard
-│   ├── upload/            # Upload-Seite
-│   ├── article/[id]/      # Artikel-Detailansicht
-│   └── training/          # Trainings-Daten-Verwaltung
-├── components/            # React Komponenten
-│   ├── Layout.tsx         # Hauptlayout mit Sidebar
-│   ├── Button.tsx         # Button-Komponente
-│   ├── Card.tsx           # Card-Komponente
-│   ├── UploadZone.tsx     # Drag & Drop Upload
-│   ├── ArticlePreview.tsx # Original-Artikel-Anzeige
-│   ├── HtmlOutput.tsx     # HTML-Code-Anzeige
+├── app/                        # Next.js App Router Pages
+│   ├── page.tsx               # Dashboard
+│   ├── upload/                # Upload-Seite
+│   ├── article/[id]/          # Artikel-Detailansicht
+│   └── training/              # Trainings-Daten-Verwaltung
+├── components/                # React Komponenten
+│   ├── Layout.tsx             # Hauptlayout mit Sidebar
+│   ├── Button.tsx             # Button-Komponente
+│   ├── Card.tsx               # Card-Komponente
+│   ├── UploadZone.tsx         # Drag & Drop Upload
+│   ├── ArticlePreview.tsx     # Original-Artikel-Anzeige
+│   ├── HtmlOutput.tsx         # HTML-Code-Anzeige
 │   └── ...
 └── lib/
-    ├── mock-data.ts       # Mock-Daten für Phase 1
-    ├── store.ts           # Zustand State Management
-    └── utils.ts           # Utility-Funktionen
+    ├── article-processor.ts   # Haupt-Processing-Pipeline
+    ├── document-parser.ts     # DOCX/TXT Parsing
+    ├── markdown-converter.ts  # Markdown-to-HTML
+    ├── ai-pattern-recognition.ts  # AI Mustererkennung
+    ├── gutenkit-generator.ts  # Gutenkit-Block-Generator
+    ├── mock-data.ts           # Mock-Daten
+    ├── store.ts               # Zustand State Management
+    ├── test-processor.ts      # Test-Script
+    └── utils.ts               # Utility-Funktionen
 ```
 
 ## Design System
@@ -77,22 +121,39 @@ Das Projekt verwendet ein "Minimalist & Modern SaaS" Design mit:
 - **Typography:** Inter Font mit fluidem Type Scale
 - **Accessibility:** WCAG AA konform, vollständige Keyboard-Navigation
 
+## Processing Pipeline
+
+Die Article-to-Design-Automatisierung verwendet eine mehrstufige Pipeline:
+
+1. **Dokument-Parsing**: Extrahiert Text aus .docx/.txt Dateien
+2. **Text-Normalisierung**: Bereinigt und standardisiert den Text
+3. **Pattern Recognition**: Erkennt semantische Muster (Praxistipp, Fun-Fact, etc.)
+   - Mit AI: Claude API analysiert den Text intelligent
+   - Ohne AI: Regel-basierte Erkennung mit Trigger-Wörtern
+4. **HTML-Generierung**: Konvertiert Text in WordPress Gutenberg Blöcke
+5. **Gutenkit-Block-Injection**: Fügt Design-Boxen an erkannten Positionen ein
+6. **Autorenbox**: Wird automatisch am Ende hinzugefügt
+
+### Unterstützte Muster
+
+| Muster | Trigger-Wörter | Farbe |
+|--------|---------------|-------|
+| Praxistipp | `Praxistipp`, `Macher-Tipp`, `Tipp:` | Grün (#e4f2e1) |
+| Wusstest Du schon? | `Wusstest du schon?`, `Infobox` | Blau (#dfe7f2) |
+| Fun-Fact | `Fun-Fact`, `Fun Fact` | Orange (#ffd191) |
+| Prompt | `Prompt:`, `ChatGPT-Prompt` | Dunkelgrau (#333333) |
+| FAQ | `FAQ`, `Häufig gestellte Fragen` | Standard |
+
 ## Nächste Schritte
 
-**Phase 2:** Backend-Integration
+**Phase 3:** Authentifizierung & Backend
 - PostgreSQL Datenbankschema
 - API Endpoints für CRUD-Operationen
-- Dokument-Parsing (.docx, .txt)
-- Markdown-to-HTML Konvertierung
-- AI-basierte Mustererkennung (OpenAI/Claude)
-- Gutenkit-Block-Generator
-
-**Phase 3:** Authentifizierung
 - User Sign Up/Login
 - Route Protection
 - User-spezifische Daten
 
-**Phase 4:** Export & API
+**Phase 4:** Export & API Finalisierung
 - DOCX/TXT Export-Funktionalität
 - API-Dokumentation
-- Rate Limiting
+- Rate Limiting & API-Keys
