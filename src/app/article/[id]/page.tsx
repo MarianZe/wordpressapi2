@@ -9,6 +9,7 @@ import { HtmlOutput } from '@/components/HtmlOutput'
 import { ExportButton } from '@/components/ExportButton'
 import { ProcessingStatus } from '@/components/ProcessingStatus'
 import { mockArticles } from '@/lib/mock-data'
+import { useAppStore } from '@/lib/store'
 import { ArrowLeft } from 'lucide-react'
 
 interface PageProps {
@@ -17,7 +18,12 @@ interface PageProps {
 
 export default function ArticleDetailPage({ params }: PageProps) {
   const { id } = use(params)
-  const article = mockArticles.find((a) => a.id === id)
+  const getArticleById = useAppStore((state) => state.getArticleById)
+
+  // Try to find article in store first, then fall back to mock data
+  const storeArticle = getArticleById(id)
+  const mockArticle = mockArticles.find((a) => a.id === id)
+  const article = storeArticle || mockArticle
 
   if (!article) {
     return (

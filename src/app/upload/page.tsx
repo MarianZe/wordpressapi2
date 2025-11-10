@@ -8,26 +8,57 @@ import { Button } from '@/components/Button'
 import { ButtonLink } from '@/components/ButtonLink'
 import { ProcessingStatus } from '@/components/ProcessingStatus'
 import { ArrowLeft } from 'lucide-react'
+import { processArticle } from '@/lib/article-processor'
+import { useAppStore } from '@/lib/store'
 
 export default function UploadPage() {
+  const addProcessedArticle = useAppStore((state) => state.addProcessedArticle)
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [status, setStatus] = useState<'pending' | 'processing' | 'completed' | 'failed'>('pending')
+  const [processedArticleId, setProcessedArticleId] = useState<string | null>(null)
 
   const handleFileSelect = (file: File) => {
     setSelectedFile(file)
     setStatus('pending')
+    setProcessedArticleId(null)
   }
 
-  const handleProcess = () => {
+  const handleProcess = async () => {
     if (!selectedFile) return
 
     setStatus('processing')
 
-    // Simulate processing
-    setTimeout(() => {
+    try {
+      // Use the real processing pipeline
+      const result = await processArticle(selectedFile, {
+        useAI: false, // Set to true if you have an API key
+        // anthropicApiKey: process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY,
+      })
+
+      // Generate a unique ID
+      const articleId = `processed-${Date.now()}`
+
+      // Create article object
+      const article = {
+        id: articleId,
+        filename: selectedFile.name,
+        status: 'completed' as const,
+        uploadedAt: new Date().toISOString(),
+        processedAt: new Date().toISOString(),
+        originalContent: result.originalContent,
+        processedHtml: result.processedHtml,
+      }
+
+      // Save to store
+      addProcessedArticle(article)
+      setProcessedArticleId(articleId)
       setStatus('completed')
-      alert('Artikel erfolgreich verarbeitet! In Phase 2 wird dies mit echter API-Logik ersetzt.')
-    }, 2000)
+    } catch (error) {
+      console.error('Processing error:', error)
+      setStatus('failed')
+      alert('Fehler beim Verarbeiten des Artikels. Bitte versuche es erneut.')
+    }
   }
 
   return (
@@ -91,8 +122,12 @@ export default function UploadPage() {
                   {status === 'failed' && 'Erneut versuchen'}
                 </Button>
 
-                {status === 'completed' && (
-                  <ButtonLink variant="secondary" href="/article/1" className="w-full">
+                {status === 'completed' && processedArticleId && (
+                  <ButtonLink
+                    variant="secondary"
+                    href={`/article/${processedArticleId}`}
+                    className="w-full"
+                  >
                     Ergebnis ansehen
                   </ButtonLink>
                 )}
